@@ -1,4 +1,5 @@
 from binance.client import Client
+import numpy as np
 import pandas as pd
 import time
 
@@ -8,10 +9,20 @@ api_secret = 'xVM8dF8qIhTRtfaTShbHON7oJffooUbP2wp3oPqYUbFLJ1ZCHLN9dEmN9niAYzVF'
 
 client = Client(api_key, api_secret)
 
-symbols = [symbol['symbol'] for symbol in client.get_exchange_info()['symbols'] if symbol['quoteAsset'] == 'USDT.P']
+symbols = [symbol['symbol'] for symbol in client.get_exchange_info()['symbols'] if symbol['quoteAsset'] == 'USDT']
 quantity = 100
 interval = "1h"  # 1-hour candlestick data
 last_order_side = {}  # To keep track of the last order side for each symbol
+
+def calculate_ema(data, period):
+    alpha = 2 / (period + 1)
+    ema = np.zeros_like(data)
+    ema[0] = data[0]
+
+    for i in range(1, len(data)):
+        ema[i] = alpha * data[i] + (1 - alpha) * ema[i - 1]
+
+    return ema
 
 while True:
     for symbol in symbols:
@@ -19,28 +30,25 @@ while True:
         klines = client.get_klines(symbol=symbol, interval=interval, limit=1000)
 
         # Extract the closing prices from klines
-        closing_prices = [float(kline[4]) for kline in klines]
-
-        # Create a DataFrame with timestamp and closing prices
-        df = pd.DataFrame(closing_prices, columns=["Close"], index=pd.to_datetime([kline[0] for kline in klines], unit="ms"))
+        closing_prices = np.array([float(kline[4]) for kline in klines])
 
         # Calculate short-term EMA
         short_ema_period = 9
-        df['ShortEMA'] = df['Close'].ewm(span=short_ema_period, adjust=False).mean()
+        short_ema = calculate_ema(closing_prices, short_ema_period)
 
         # Calculate long-term EMA
         long_ema_period = 21
-        df['LongEMA'] = df['Close'].ewm(span=long_ema_period, adjust=False).mean()
+        long_ema = calculate_ema(closing_prices, long_ema_period)
 
         # Get current price
-        current_price = df['Close'].iloc[-1]
+        current_price = closing_prices[-1]
 
         # Determine order side and limit price based on EMA positions
-        if df['ShortEMA'].iloc[-1] > df['LongEMA'].iloc[-1] and df['ShortEMA'].iloc[-2] <= df['LongEMA'].iloc[-2]:
+        if short_ema[-1] > long_ema[-1] and short_ema[-2] <= long_ema[-2]:
             # Crossover: Short-term EMA crosses above Long-term EMA
             side = "BUY"  # Place a long position
             limit_price = current_price * 1.002  # 0.2% above current price
-        elif df['ShortEMA'].iloc[-1] < df['LongEMA'].iloc[-1] and df['ShortEMA'].iloc[-2] >= df['LongEMA'].iloc[-2]:
+        elif short_ema[-1] < long_ema[-1] and short_ema[-2] >= long_ema[-2]:
             # Crossunder: Short-term EMA crosses below Long-term EMA
             side = "SELL"  # Place a short position
             limit_price = current_price * 0.998  # 0.2% below current price
@@ -68,3 +76,4 @@ while True:
 
     # Sleep for a short period before the next iteration
     time.sleep(60)  # Sleep for 60 seconds before the next iteration
+
