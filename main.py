@@ -6,7 +6,7 @@ import time
 api_key = 'BVhb32XgQmX17IGs3vVH2Hw1fiH9W84pg8K5JtLuQnRKHPy7YlyPTG0qChkxTnrL'
 api_secret = 'xVM8dF8qIhTRtfaTShbHON7oJffooUbP2wp3oPqYUbFLJ1ZCHLN9dEmN9niAYzVF'
 
-client = Client(api_key, api_secret, testnet=False)  # Use the main Binance platform
+client = Client(api_key, api_secret, testnet=False, futures_api=True)  # Use the main Binance Futures platform
 
 symbols = ["BTCUSDT", "ETHUSDT", "BNBUSDT"]  # Add more symbols as needed
 interval = "1h"  # 1-hour candlestick data
@@ -14,7 +14,7 @@ interval = "1h"  # 1-hour candlestick data
 while True:
     for symbol in symbols:
         # Get historical klines data
-        klines = client.get_historical_klines(symbol, interval, "1 day ago UTC")
+        klines = client.get_klines(symbol=symbol, interval=interval, limit=1000)
 
         # Extract the closing prices from klines
         closing_prices = [float(kline[4]) for kline in klines]
@@ -34,21 +34,22 @@ while True:
         current_price = df['Close'].iloc[-1]
 
         # Determine order side and limit price based on EMA positions
-        if df['ShortEMA'].iloc[-1] > current_price and df['LongEMA'].iloc[-1] > current_price:
-            side = "BUY"
-            limit_price = current_price * 0.998  # 0.2% below current price
-        elif df['ShortEMA'].iloc[-1] < current_price and df['LongEMA'].iloc[-1] < current_price:
-            side = "SELL"
+        if df['ShortEMA'].iloc[-1] > df['LongEMA'].iloc[-1] and df['ShortEMA'].iloc[-2] <= df['LongEMA'].iloc[-2]:
+            # Crossover: Short-term EMA crosses above Long-term EMA
+            side = "BUY"  # Place a long position
             limit_price = current_price * 1.002  # 0.2% above current price
+        elif df['ShortEMA'].iloc[-1] < df['LongEMA'].iloc[-1] and df['ShortEMA'].iloc[-2] >= df['LongEMA'].iloc[-2]:
+            # Crossunder: Short-term EMA crosses below Long-term EMA
+            side = "SELL"  # Place a short position
+            limit_price = current_price * 0.998  # 0.2% below current price
         else:
             continue  # No action if conditions are not met
 
-        # Calculate the equivalent quantity in terms of USDT (fixed at 100 USDT)
-        usdt_quantity = 100
-        quantity = usdt_quantity / current_price
+        # Calculate the equivalent quantity in contracts (fixed at 1 contract)
+        quantity = 1
 
-        # Place a market order
-        order = client.create_order(
+        # Place a limit order on the Binance Futures market
+        order = client.futures_create_order(
             symbol=symbol,
             side=side,
             type="LIMIT",
@@ -57,8 +58,7 @@ while True:
             price=limit_price,
         )
 
-        print(f"Placed {side} limit order for {quantity} on {symbol} at {pd.Timestamp.now()} with limit price {limit_price}")
+        print(f"Placed {side} limit order for {quantity} contract(s) on {symbol} at {pd.Timestamp.now()} with limit price {limit_price}")
 
     # Sleep for a short period before the next iteration
     time.sleep(60)  # Sleep for 60 seconds before the next iteration
-
