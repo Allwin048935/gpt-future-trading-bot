@@ -6,7 +6,7 @@ import time
 api_key = 'BVhb32XgQmX17IGs3vVH2Hw1fiH9W84pg8K5JtLuQnRKHPy7YlyPTG0qChkxTnrL'
 api_secret = 'xVM8dF8qIhTRtfaTShbHON7oJffooUbP2wp3oPqYUbFLJ1ZCHLN9dEmN9niAYzVF'
 
-client = Client(api_key, api_secret, testnet=True)  # Use testnet for paper trading
+client = Client(api_key, api_secret, testnet=False)  # Use the main Binance platform
 
 symbols = ["BTCUSDT", "ETHUSDT", "BNBUSDT"]  # Add more symbols as needed
 interval = "1h"  # 1-hour candlestick data
@@ -47,8 +47,8 @@ while True:
         usdt_quantity = 100
         quantity = usdt_quantity / current_price
 
-        # Place a test limit order
-        order = client.futures_create_order(
+        # Place a market order
+        order = client.create_order(
             symbol=symbol,
             side=side,
             type="LIMIT",
@@ -61,3 +61,4 @@ while True:
 
     # Sleep for a short period before the next iteration
     time.sleep(60)  # Sleep for 60 seconds before the next iteration
+
