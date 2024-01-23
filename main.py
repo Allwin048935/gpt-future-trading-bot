@@ -8,7 +8,7 @@ api_secret = 'xVM8dF8qIhTRtfaTShbHON7oJffooUbP2wp3oPqYUbFLJ1ZCHLN9dEmN9niAYzVF'
 
 client = Client(api_key, api_secret)
 
-symbols = [symbol['symbol'] for symbol in client.get_exchange_info()['symbols'] if symbol['quoteAsset'] == 'USDT']
+symbols = [symbol['symbol'] for symbol in client.get_exchange_info()['symbols'] if symbol['quoteAsset'] == 'USDT.P']
 quantity = 100
 interval = "1h"  # 1-hour candlestick data
 last_order_side = {}  # To keep track of the last order side for each symbol
