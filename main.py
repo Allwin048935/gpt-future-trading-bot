@@ -1,6 +1,6 @@
 from binance.client import Client
 import pandas as pd
-import talib
+import time
 
 # Replace YOUR_API_KEY and YOUR_API_SECRET with your Binance API key and secret
 api_key = 'BVhb32XgQmX17IGs3vVH2Hw1fiH9W84pg8K5JtLuQnRKHPy7YlyPTG0qChkxTnrL'
@@ -13,10 +13,6 @@ interval = "1h"  # 1-hour candlestick data
 
 while True:
     for symbol in symbols:
-        # Get current price
-        ticker = client.get_ticker(symbol=symbol)
-        current_price = float(ticker['lastPrice'])
-
         # Get historical klines data
         klines = client.get_historical_klines(symbol, interval, "1 day ago UTC")
 
@@ -28,11 +24,14 @@ while True:
 
         # Calculate short-term EMA
         short_ema_period = 9
-        df['ShortEMA'] = talib.EMA(df['Close'], timeperiod=short_ema_period)
+        df['ShortEMA'] = df['Close'].ewm(span=short_ema_period, adjust=False).mean()
 
         # Calculate long-term EMA
         long_ema_period = 21
-        df['LongEMA'] = talib.EMA(df['Close'], timeperiod=long_ema_period)
+        df['LongEMA'] = df['Close'].ewm(span=long_ema_period, adjust=False).mean()
+
+        # Get current price
+        current_price = df['Close'].iloc[-1]
 
         # Determine order side and limit price based on EMA positions
         if df['ShortEMA'].iloc[-1] > current_price and df['LongEMA'].iloc[-1] > current_price:
@@ -62,10 +61,3 @@ while True:
 
     # Sleep for a short period before the next iteration
     time.sleep(60)  # Sleep for 60 seconds before the next iteration
-
-
-    # Set the fixed USDT amount to $100
-    fixed_usdt_amount = 100.0
-
-    main(short_ema_period, long_ema_period, interval, leverage, fixed_usdt_amount)
-
