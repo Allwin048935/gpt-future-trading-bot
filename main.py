@@ -30,7 +30,7 @@ telegram_bot = Bot(token=telegram_token)
 last_order_type = {}
 
 # Function to get historical OHLCV data
-async def fetch_ohlcv(symbol, timeframe='1h', limit=100):
+async def fetch_ohlcv(symbol, timeframe='1D', limit=100):
     ohlcv = await exchange.fetch_ohlcv(symbol, timeframe, limit=limit)
     df = pd.DataFrame(ohlcv, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
     df['timestamp'] = pd.to_datetime(df['timestamp'], unit='ms')
