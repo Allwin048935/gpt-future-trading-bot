@@ -6,7 +6,7 @@ import time
 api_key = 'BVhb32XgQmX17IGs3vVH2Hw1fiH9W84pg8K5JtLuQnRKHPy7YlyPTG0qChkxTnrL'
 api_secret = 'xVM8dF8qIhTRtfaTShbHON7oJffooUbP2wp3oPqYUbFLJ1ZCHLN9dEmN9niAYzVF'
 
-client = Client(api_key, api_secret, testnet=False, futures_api=True)  # Use the main Binance Futures platform
+client = Client(api_key, api_secret)
 
 symbols = ["BTCUSDT", "ETHUSDT", "BNBUSDT"]  # Add more symbols as needed
 interval = "1h"  # 1-hour candlestick data
