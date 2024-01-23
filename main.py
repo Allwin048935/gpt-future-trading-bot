@@ -1,17 +1,17 @@
-
 import ccxt
 import pandas as pd
 import numpy as np
 import asyncio
-from telegram import Bot, ParseMode
+from telegram import Bot, ParseMode  # Corrected import statement
 
 # Binance API credentials
 api_key = 'BVhb32XgQmX17IGs3vVH2Hw1fiH9W84pg8K5JtLuQnRKHPy7YlyPTG0qChkxTnrL'
 api_secret = 'xVM8dF8qIhTRtfaTShbHON7oJffooUbP2wp3oPqYUbFLJ1ZCHLN9dEmN9niAYzVF'
 
+
 # Telegram API credentials
 telegram_token = '6811110812:AAFNJp5kcSh0KZ71Yizf8Y3rPBarz-ywopM'
-channel_id = '@cryptoema_bot'  # Replace with your channel ID
+private_chat_id = '1385370555'  # Replace with your private chat ID
 
 # Initialize Binance client
 exchange = ccxt.binance({
@@ -30,7 +30,7 @@ telegram_bot = Bot(token=telegram_token)
 last_order_type = {}
 
 # Function to get historical OHLCV data
-async def fetch_ohlcv(symbol, timeframe='1D', limit=100):
+async def fetch_ohlcv(symbol, timeframe='1h', limit=100):
     ohlcv = await exchange.fetch_ohlcv(symbol, timeframe, limit=limit)
     df = pd.DataFrame(ohlcv, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
     df['timestamp'] = pd.to_datetime(df['timestamp'], unit='ms')
@@ -60,7 +60,7 @@ async def get_current_price(symbol):
 
 # Function to send message to Telegram
 def send_telegram_message(message):
-    telegram_bot.send_message(chat_id=channel_id, text=message, parse_mode=ParseMode.MARKDOWN)
+    telegram_bot.send_message(chat_id=private_chat_id, text=message, parse_mode=ParseMode.MARKDOWN)
 
 # Main function to run the trading bot
 async def run_trading_bot(symbol, short_ema_period, long_ema_period, trade_quantity_usdt):
@@ -121,3 +121,4 @@ async def main():
 
 if __name__ == '__main__':
     asyncio.run(main())
+
