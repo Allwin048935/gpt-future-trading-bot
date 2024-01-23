@@ -8,8 +8,10 @@ api_secret = 'xVM8dF8qIhTRtfaTShbHON7oJffooUbP2wp3oPqYUbFLJ1ZCHLN9dEmN9niAYzVF'
 
 client = Client(api_key, api_secret)
 
-symbols = ["BTCUSDT", "ETHUSDT", "BNBUSDT"]  # Add more symbols as needed
+symbols = [symbol['symbol'] for symbol in client.get_exchange_info()['symbols'] if symbol['quoteAsset'] == 'USDT']
+quantity = 100
 interval = "1h"  # 1-hour candlestick data
+last_order_side = {}  # To keep track of the last order side for each symbol
 
 while True:
     for symbol in symbols:
@@ -45,8 +47,9 @@ while True:
         else:
             continue  # No action if conditions are not met
 
-        # Calculate the equivalent quantity in contracts (fixed at 1 contract)
-        quantity = 1
+        # Check if the same order side was placed in the last iteration for the symbol
+        if symbol in last_order_side and last_order_side[symbol] == side:
+            continue  # Skip placing the same type of order consecutively
 
         # Place a limit order on the Binance Futures market
         order = client.futures_create_order(
@@ -58,7 +61,10 @@ while True:
             price=limit_price,
         )
 
-        print(f"Placed {side} limit order for {quantity} contract(s) on {symbol} at {pd.Timestamp.now()} with limit price {limit_price}")
+        print(f"Placed {side} limit order for {quantity} USDT on {symbol} at {pd.Timestamp.now()} with limit price {limit_price}")
+
+        # Update the last order side for the symbol
+        last_order_side[symbol] = side
 
     # Sleep for a short period before the next iteration
     time.sleep(60)  # Sleep for 60 seconds before the next iteration
