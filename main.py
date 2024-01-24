@@ -4,8 +4,8 @@ import pandas as pd
 import time
 
 # Replace YOUR_API_KEY and YOUR_API_SECRET with your Binance API key and secret
-api_key = 'BVhb32XgQmX17IGs3vVH2Hw1fiH9W84pg8K5JtLuQnRKHPy7YlyPTG0qChkxTnrL'
-api_secret = 'xVM8dF8qIhTRtfaTShbHON7oJffooUbP2wp3oPqYUbFLJ1ZCHLN9dEmN9niAYzVF'
+api_key = ''
+api_secret = ''
 
 client = Client(api_key, api_secret)
 
